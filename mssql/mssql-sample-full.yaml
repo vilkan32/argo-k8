@@ -29,7 +29,7 @@ spec:
 ---
 # Deployment (SQL Server Developer/Express for dev)
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: mssql
   namespace: mssql-dev
