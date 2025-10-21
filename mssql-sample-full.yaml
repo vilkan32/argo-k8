@@ -1,0 +1,91 @@
+# Namespace (optional)
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mssql-dev
+---
+# Secret for SA password (replace with a strong password)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mssql-sa-secret
+  namespace: mssql-dev
+type: Opaque
+stringData:
+  SA_PASSWORD: "YourStrong!Passw0rd"   # change this before applying
+---
+# PersistentVolumeClaim (uses storage class default)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mssql-data-pvc
+  namespace: mssql-dev
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 20Gi
+---
+# Deployment (SQL Server Developer/Express for dev)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mssql
+  namespace: mssql-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mssql
+  template:
+    metadata:
+      labels:
+        app: mssql
+    spec:
+      containers:
+      - name: mssql
+        # Use Developer (dev-only) or Express for lightweight:
+        image: mcr.microsoft.com/mssql/server:2019-latest
+        # if you prefer Express (smaller) use something like:
+        # image: mcr.microsoft.com/mssql/server:2019-CU18-ubuntu-20.04
+        ports:
+        - containerPort: 1433
+          name: tcp-mssql
+        env:
+        - name: ACCEPT_EULA
+          value: "Y"
+        - name: SA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mssql-sa-secret
+              key: SA_PASSWORD
+        volumeMounts:
+        - name: mssqldata
+          mountPath: /var/opt/mssql
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "1000m"
+      volumes:
+      - name: mssqldata
+        persistentVolumeClaim:
+          claimName: mssql-data-pvc
+---
+# ClusterIP Service (internal access)
+apiVersion: v1
+kind: Service
+metadata:
+  name: mssql
+  namespace: mssql-dev
+spec:
+  selector:
+    app: mssql
+  ports:
+    - port: 1433
+      targetPort: 1433
+      protocol: TCP
+      name: mssql
+  type: ClusterIP
