@@ -18,7 +18,7 @@ stringData:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mssql-data-pvc
+  name: mssql-data-pvc-nfs
   namespace: mssql-dev
 spec:
   storageClassName: nfs
@@ -73,7 +73,7 @@ spec:
       volumes:
       - name: mssqldata
         persistentVolumeClaim:
-          claimName: mssql-data-pvc
+          claimName: mssql-data-pvc-nfs
 ---
 # ClusterIP Service (internal access)
 apiVersion: v1
