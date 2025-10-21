@@ -21,7 +21,7 @@ metadata:
   name: mssql-data-pvc
   namespace: mssql-dev
 spec:
-  storageClassName: standard
+  storageClassName: nfs
   accessModes: ["ReadWriteOnce"]
   resources:
     requests:
